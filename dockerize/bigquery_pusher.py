@@ -1,8 +1,11 @@
+import os
 import argparse
 
 from google.cloud import bigquery, logging
 from google.cloud.exceptions import NotFound
 
+logging_client = logging.Client()
+logger = logging_client.logger("projects/text-analysis-323506/logs/containers-log")
 
 class BigqueryPusher(object):
 
@@ -19,9 +22,6 @@ class BigqueryPusher(object):
         ]
         self.gcs_path = gcs_path
         self.bq_client = bigquery.Client()
-        self.logging_client = logging.Client()
-        self.log_name = "containers-log"
-        self.logger = self.logging_client.logger(self.log_name)
 
         try:
             self.bq_client.get_dataset(self.database_id)
@@ -39,13 +39,13 @@ class BigqueryPusher(object):
         dataset = bigquery.Dataset(self.database_id)
         dataset.location = "us-east1"
         dataset = self.bq_client.create_dataset(dataset, timeout=30)
-        self.logger.log_text(f"Created dataset {self.bq_client.project}.{dataset.dataset_id}")
+        # logger.log_text(f"Created dataset {self.bq_client.project}.{dataset.dataset_id}")
 
     def create_table(self):
         """ Creates bigquery table """
         table = bigquery.Table(self.table_id, schema=self.table_schema)
         table = self.bq_client.create_table(table)
-        self.logger.log_text(f"Created table {table.project}.{table.dataset_id}.{table.table_id}")
+        # logger.log_text(f"Created table {table.project}.{table.dataset_id}.{table.table_id}")
 
     def insert(self):
         """ Insert values into the specified table """
@@ -67,7 +67,7 @@ class BigqueryPusher(object):
 
         # Waiting for inserting to complete
         load_job.result()
-        self.logger.log_text("Inserted {} rows".format(self.dest_table.num_rows))
+        # logger.log_text("Inserted {} rows".format(self.dest_table.num_rows))
 
 
 if __name__ == '__main__':
@@ -76,5 +76,6 @@ if __name__ == '__main__':
                         help="Gcs path of the csv file beginning with 'gs://'")
     args = parser.parse_args()
 
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/opt/key.json'
     bq_pusher = BigqueryPusher(args.gcs_path)
     bq_pusher.insert()
