@@ -1,11 +1,13 @@
 import argparse
 
 from google.cloud import bigquery, logging
+from google.cloud.exceptions import NotFound
 
 
 class BigqueryPusher(object):
 
     def __init__(self, gcs_path: str):
+        self.database_id = 'text-analysis-323506.iris_dataset'
         self.table_id = 'text-analysis-323506.iris_dataset.iris_table'
         self.table_schema = [
             bigquery.SchemaField("Id", "INTEGER", mode="REQUIRED"),
@@ -17,13 +19,36 @@ class BigqueryPusher(object):
         ]
         self.gcs_path = gcs_path
         self.bq_client = bigquery.Client()
-        self.dest_table = self.bq_client.get_table(self.table_id)
         self.logging_client = logging.Client()
         self.log_name = "containers-log"
         self.logger = self.logging_client.logger(self.log_name)
 
+        try:
+            self.bq_client.get_dataset(self.database_id)
+        except NotFound:
+            self.create_database()
+            
+        try:
+            self.dest_table = self.bq_client.get_table(self.table_id)
+        except NotFound:
+            self.create_table()
+            self.dest_table = self.bq_client.get_table(self.table_id)
+
+    def create_database(self):
+        """ Creates bigquery database """
+        dataset = bigquery.Dataset(self.database_id)
+        dataset.location = "us-east1"
+        dataset = self.bq_client.create_dataset(dataset, timeout=30)
+        self.logger.log_text(f"Created dataset {self.bq_client.project}.{dataset.dataset_id}")
+
+    def create_table(self):
+        """ Creates bigquery table """
+        table = bigquery.Table(self.table_id, schema=self.table_schema)
+        table = self.bq_client.create_table(table)
+        self.logger.log_text(f"Created table {table.project}.{table.dataset_id}.{table.table_id}")
+
     def insert(self):
-        self.logger.log_text("Number of rows in the table before inserting: {}".format(self.dest_table.num_rows))
+        """ Insert values into the specified table """
 
         # Bigquery load job configuration
         job_config = bigquery.LoadJobConfig(
@@ -42,7 +67,7 @@ class BigqueryPusher(object):
 
         # Waiting for inserting to complete
         load_job.result()
-        self.logger.log_text("Number of rows in the table after inserting: {}".format(self.dest_table.num_rows))
+        self.logger.log_text("Inserted {} rows".format(self.dest_table.num_rows))
 
 
 if __name__ == '__main__':
