@@ -9,25 +9,27 @@ while running their containers, all on Google Cloud.
 - Activate google cloud shell.
 - Clone this repository.
 ```shell
-git clone https://github.com/Subrahmanyajoshi/Docker-Containers-on-Google-Cloud.git
+git clone https://github.com/Subrahmanyajoshi/Bigquery-Containers-on-Google-Cloud.git
 ```
 - Navigate to dockerize folder.
 ```shell
-cd dockerize
+cd Bigquery-Containers-on-Google-Cloud/dockerize
 ```
 - In this project, I have used Iris dataset. Any structured dataset can be used. It's schema needs to be updated inside 
 the bigquery_pusher.py script.
 - Create a google cloud service account, and it's associated key. 'Account-Name' can be any desired name.
 ```shell
 gcloud iam service-accounts create <Account-Name> --display-name "api account"
-gcloud iam service-accounts keys create ./key.json --iam-account <Account-Name>@$<Project-Id>.iam.gserviceaccount.com
+gcloud iam service-accounts keys create ./key.json --iam-account <Account-Name>@<Project-Id>.iam.gserviceaccount.com
 ```
 - Above command will create a key.json containing google cloud account credentials. It needs to be stored in 'dockerize'
 folder to be available inside the docker container.
 - Give storage admin and bigquery admin roles to newly created service account.
 ```shell
-gcloud projects add-iam-policy-binding <Project-Id> --member=serviceAccount:<Account-Name> --role=roles/bigquery.admin
-gcloud projects add-iam-policy-binding <Project-Id> --member=serviceAccount:<Account-Name> --role=roles/storage.admin
+gcloud projects add-iam-policy-binding <Project-Id> \
+  --member=serviceAccount:<Account-Name>@<Project-Id>.iam.gserviceaccount.com --role=roles/bigquery.admin
+gcloud projects add-iam-policy-binding <Project-Id> \
+  --member=serviceAccount:<Account-Name>@<Project-Id>.iam.gserviceaccount.com --role=roles/storage.admin
 ```
 - Navigate to project root.
 ```shell
