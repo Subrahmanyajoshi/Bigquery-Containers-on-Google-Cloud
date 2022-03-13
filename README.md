@@ -1,5 +1,5 @@
 # Bigquery-Containers-on-Google-Cloud
-- This mini project shows how to build docker images, push them to artifact registry and access google cloud APIs
+- This mini project shows how to build docker images, push them to artifact registry and access google cloud Bigquery API
 while running their containers, all on Google Cloud.
 - In this project I'm building a docker image, reading data from google cloud storage and inserting them to a bigquery table.
 - Bigquery dataset and table will be created automatically if they don't exist.

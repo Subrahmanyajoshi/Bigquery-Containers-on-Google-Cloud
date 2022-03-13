@@ -91,6 +91,8 @@ if __name__ == '__main__':
     if not os.path.exists(key_path):
         raise ValueError(f"Google Cloud service account key path {key_path} doesn't exist")
 
+    # Set key_path as an environment variable.
+    # This is extremely important since it's required to access Google Cloud APIs inside the container.
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_path
     bq_pusher = BigqueryPusher(args.gcs_path)
     bq_pusher.insert()
