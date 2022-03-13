@@ -14,6 +14,7 @@ cloud_logger = logging.getLogger('cloudLogger')
 cloud_logger.setLevel(logging.INFO)
 cloud_logger.addHandler(handler)
 
+
 class BigqueryPusher(object):
 
     def __init__(self, gcs_path: str):
